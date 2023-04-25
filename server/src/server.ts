@@ -7,8 +7,9 @@ import {
   InitializeResult,
   SemanticTokensRequest,
   Connection,
+  Range,
 } from "vscode-languageserver";
-import { TextDocument } from "vscode-languageserver-textdocument";
+import { TextDocument, TextEdit } from "vscode-languageserver-textdocument";
 
 import { LanguageServiceProvider, legend } from "./sas/LanguageServiceProvider";
 import { CompletionProvider } from "./sas/CompletionProvider";
@@ -47,6 +48,7 @@ export const init = (conn: Connection): void => {
           triggerCharacters: [" "],
           resolveProvider: true,
         },
+        documentFormattingProvider: true,
       },
     };
     return result;
@@ -88,6 +90,20 @@ export const init = (conn: Connection): void => {
       startLine: block.range.start.line,
       endLine: block.range.end.line,
     }));
+  });
+
+  connection.onDocumentFormatting((params): TextEdit[] => {
+    const languageService = getLanguageService(params.textDocument.uri);
+    const formatter = languageService.formatter;
+    const lineCount = languageService.getLineCount();
+
+    const range: Range = {
+      start: { line: 0, character: 0 },
+      end: { line: lineCount, character: 0 },
+    };
+    const formattedText = formatter.format({});
+
+    return [{ range, newText: formattedText }];
   });
 
   documents.onDidChangeContent((event) => {

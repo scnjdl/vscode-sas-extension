@@ -7,6 +7,7 @@ import { Model } from "./Model";
 import { CompletionProvider } from "./CompletionProvider";
 import { DocumentSymbol, SymbolKind } from "vscode-languageserver-types";
 import type { LibService } from "./SyntaxDataProvider";
+import { Formatter } from "./formatter/Formatter";
 
 export const legend = {
   tokenTypes: [
@@ -41,13 +42,15 @@ function getType(type: string) {
 const SymbolKinds = [SymbolKind.Struct, SymbolKind.Function, SymbolKind.Module];
 
 export class LanguageServiceProvider {
-  private model;
   private syntaxProvider;
+  private model;
   public completionProvider;
+  public formatter;
 
   constructor(doc: TextDocument) {
     this.model = new Model(doc);
     this.syntaxProvider = new SyntaxProvider(this.model);
+    this.formatter = new Formatter(this.model);
     this.completionProvider = new CompletionProvider(
       this.model,
       this.syntaxProvider
@@ -79,6 +82,10 @@ export class LanguageServiceProvider {
         },
       },
     });
+  }
+
+  getLineCount(): number {
+    return this.model.getLineCount();
   }
 
   getTokens(): number[] {
